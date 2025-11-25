@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>ChapInsight – Impulsado con IA </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Fuente -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --primary: #1e88e5;
+      --primary-light: #e3f2fd;
+      --bg: #f4f6fb;
+      --card-bg: #ffffff;
+      --text-main: #1f2933;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.08);
+      --radius-lg: 16px;
+      --radius-md: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #e3f2fd 0, #f4f6fb 40%, #f9fafb 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .app-container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px 24px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1e88e5, #00bcd4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: 0 10px 20px rgba(33, 150, 243, 0.35);
+    }
+
+    .brand-text-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .brand-text-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .header-right {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+      gap: 18px;
+    }
+
+    /* Chat panel */
+    .chat-card {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      min-height: 480px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(226, 232, 240, 0.7);
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .chat-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .chat-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .status-pill {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 4px 8px 0;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .message-row {
+      display: flex;
+      max-width: 100%;
+    }
+
+    .message-row.user {
+      justify-content: flex-end;
+    }
+
+    .message-row.bot {
+      justify-content: flex-start;
+    }
+
+    .message-bubble {
+      padding: 8px 11px;
+      border-radius: 14px;
+      font-size: 13px;
+      line-height: 1.35;
+      max-width: 90%;
+      white-space: pre-line;
+    }
+
+    .message-bubble.user {
+      background: var(--primary);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message-bubble.bot {
+      background: #f3f4f6;
+      color: var(--text-main);
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-form {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #f3f4f6;
+      border-radius: 999px;
+      padding: 3px 4px 3px 10px;
+      border: 1px solid transparent;
+    }
+
+    .input-row:focus-within {
+      border-color: var(--primary);
+      background: #e9f3ff;
+    }
+
+    #user-input {
+      border: none;
+      outline: none;
+      background: transparent;
+      flex: 1;
+      font-size: 13px;
+      padding: 6px 4px;
+    }
+
+    .btn-icon {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      transition: background 0.15s ease;
+    }
+
+    .btn-icon:hover {
+      background: rgba(148, 163, 184, 0.25);
+    }
+
+    .btn-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-send {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 999px;
+      padding: 6px 13px;
+      border: none;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 4px 10px rgba(30, 136, 229, 0.5);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+    }
+
+    .btn-send:hover {
+      background: #1565c0;
+      box-shadow: 0 6px 16px rgba(21, 101, 192, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .btn-send:active {
+      transform: translateY(0);
+      box-shadow: 0 3px 8px rgba(21, 101, 192, 0.5);
+    }
+
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .suggestion-pill {
+      border-radius: 999px;
+      background: #f3f4f6;
+      border: 1px dashed #d1d5db;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.1s ease, color 0.1s ease, border-color 0.1s ease;
+    }
+
+    .suggestion-pill:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .loading-indicator {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: none;
+      align-items: center;
+      gap: 6px;
+      margin-left: 2px;
+      margin-bottom: 4px;
+    }
+
+    .loading-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--primary);
+      animation: pulse 1s infinite ease-in-out alternate;
+    }
+
+    .loading-dot:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .loading-dot:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(0.9); opacity: 0.5; }
+      to   { transform: scale(1.15); opacity: 1; }
+    }
+
+    /* Insights panel */
+    .insights-card {
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      min-height: 480px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(226, 232, 240, 0.7);
+    }
+
+    .insights-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .insights-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .insights-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .kpi-card {
+      background: #f9fafb;
+      border-radius: var(--radius-md);
+      padding: 8px 9px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .kpi-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .chart-card {
+      background: #f9fafb;
+      border-radius: var(--radius-md);
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 12px;
+      /* Tamaño fijo para evitar scroll raro */
+      height: 260px;
+      overflow: hidden;
+    }
+
+    .chart-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .chart-title span {
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    /* forcemos tamaño visible del canvas */
+    #chart {
+      width: 100% !important;
+      height: 210px !important;
+    }
+
+    .table-card {
+      background: #f9fafb;
+      border-radius: var(--radius-md);
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      flex: 1;
+      overflow: auto;
+    }
+
+    .table-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    th, td {
+      padding: 5px 6px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
+    }
+
+    th {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: #f3f4f6;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tbody tr:hover {
+      background: #f1f5f9;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .chat-card, .insights-card {
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 420px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <div class="brand">
+        <div class="brand-logo">CI</div>
+        <div>
+          <div class="brand-text-title">ChapInsight</div>
+          <div class="brand-text-subtitle">Insights de datos al estilo chapín, impulsados por “IA”.</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div>Demo de mockup funcional</div>
+        <div>Chat + KPIs + Gráficos sobre datos simulados</div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <!-- Chat -->
+      <section class="chat-card">
+        <div class="chat-header">
+          <div>
+            <div class="chat-title">Chat de análisis</div>
+            <div class="chat-subtitle">Haz preguntas sobre las ventas simuladas</div>
+          </div>
+          <div class="status-pill">
+            <span class="status-dot"></span>
+            IA simulada activa
+          </div>
+        </div>
+
+        <div id="messages" class="messages"></div>
+
+        <div class="loading-indicator" id="loading-indicator">
+          <div class="loading-dot"></div>
+          <div class="loading-dot"></div>
+          <div class="loading-dot"></div>
+          <span>Analizando datos…</span>
+        </div>
+
+        <form id="chat-form" class="chat-form">
+          <div class="input-row">
+            <input
+              id="user-input"
+              type="text"
+              placeholder="Escribe tu pregunta sobre los datos…"
+              autocomplete="off"
+            />
+            <button type="button" class="btn-icon" title="Micrófono (solo visual)">
+              <!-- Icono de micrófono -->
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 3C10.343 3 9 4.343 9 6V11C9 12.657 10.343 14 12 14C13.657 14 15 12.657 15 11V6C15 4.343 13.657 3 12 3Z" stroke="#4b5563" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M6 11C6 13.761 8.239 16 11 16H13C15.761 16 18 13.761 18 11" stroke="#4b5563" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 19H14" stroke="#4b5563" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 16V19" stroke="#4b5563" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button type="submit" class="btn-send">
+              <span>Enviar</span>
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M5 12H19" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M13 6L19 12L13 18" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- 6 sugerencias demo -->
+          <div class="suggestions">
+            <button type="button" class="suggestion-pill" data-prompt="Muéstrame las ventas de la última semana por sucursal">
+              Ventas por sucursal (última semana)
+            </button>
+            <button type="button" class="suggestion-pill" data-prompt="¿Qué sucursal vendió más a clientes corporativos?">
+              Top sucursal corporativa
+            </button>
+            <button type="button" class="suggestion-pill" data-prompt="Genera un resumen de ventas por tipo de cliente y categoría de producto">
+              Resumen por tipo de cliente y categoría
+            </button>
+            <button type="button" class="suggestion-pill" data-prompt="Dame un resumen total de ventas por día">
+              Ventas por día
+            </button>
+            <button type="button" class="suggestion-pill" data-prompt="Muéstrame ventas por categoría de producto">
+              Ventas por categoría
+            </button>
+            <button type="button" class="suggestion-pill" data-prompt="Dame un análisis general de ventas">
+              Análisis general
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Insights -->
+      <section class="insights-card">
+        <div class="insights-header">
+          <div>
+            <div class="insights-title">Insights generados</div>
+            <div class="insights-subtitle">KPIs, gráficos y tabla en base a tus preguntas</div>
+          </div>
+          <div class="tag">Dataset: Ventas simuladas</div>
+        </div>
+
+        <div id="kpi-grid" class="kpi-grid">
+          <!-- KPIs dinámicos -->
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">
+            <span id="chart-title">Esperando una consulta…</span>
+            <small id="chart-subtitle" class="insights-subtitle"></small>
+          </div>
+          <canvas id="chart"></canvas>
+        </div>
+
+        <div class="table-card">
+          <div class="table-title">
+            <span>Detalle de datos</span>
+            <span id="table-caption" class="insights-subtitle">Se actualizará con cada pregunta.</span>
+          </div>
+          <div style="max-height: 190px; overflow: auto;">
+            <table>
+              <thead id="table-head"></thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // =========================
+    // 1. Dataset de ventas mock
+    // =========================
+    const sucursales = ["Centro", "Zona 10", "Miraflores", "Xela", "Amatitlán"];
+    const tiposCliente = ["Corporativo", "Retail"];
+    const categorias = ["Electrónicos", "Ropa", "Alimentos", "Servicios"];
+    const ventas = [];
+
+    // Generamos ~60 registros simulados entre 2025-11-01 y 2025-11-14
+    (function generarDatos() {
+      const start = new Date("2025-11-01");
+      for (let i = 0; i < 60; i++) {
+        const date = new Date(start.getTime());
+        date.setDate(start.getDate() + (i % 14)); // rango de 14 días
+        const fechaStr = date.toISOString().slice(0, 10);
+        const sucursal = sucursales[Math.floor(Math.random() * sucursales.length)];
+        const tipoCliente = tiposCliente[Math.floor(Math.random() * tiposCliente.length)];
+        const categoria = categorias[Math.floor(Math.random() * categorias.length)];
+        const monto = Math.floor(Math.random() * 9000) + 2000; // 2,000 a 11,000
+        ventas.push({
+          fecha: fechaStr,
+          sucursal,
+          tipoCliente,
+          categoriaProducto: categoria,
+          monto
+        });
+      }
+    })();
+
+    // =========================
+    // 2. Utilidades de datos
+    // =========================
+    function agruparYSumar(arr, clave) {
+      const mapa = {};
+      for (const item of arr) {
+        const key = item[clave];
+        if (!mapa[key]) mapa[key] = 0;
+        mapa[key] += item.monto;
+      }
+      return mapa;
+    }
+
+    function formatearMoneda(valor) {
+      return "Q " + valor.toLocaleString("es-GT");
+    }
+
+    function filtrarUltimaSemana(data) {
+      if (data.length === 0) return data;
+      const fechas = data.map(d => new Date(d.fecha));
+      const maxDate = new Date(Math.max.apply(null, fechas));
+      const unaSemanaAntes = new Date(maxDate);
+      unaSemanaAntes.setDate(maxDate.getDate() - 6); // últimos 7 días
+      return data.filter(d => {
+        const f = new Date(d.fecha);
+        return f >= unaSemanaAntes && f <= maxDate;
+      });
+    }
+
+    // =========================
+    // 3. UI helpers
+    // =========================
+    const messagesEl = document.getElementById("messages");
+    const chatForm = document.getElementById("chat-form");
+    const userInput = document.getElementById("user-input");
+    const loadingIndicator = document.getElementById("loading-indicator");
+    const kpiGrid = document.getElementById("kpi-grid");
+    const chartTitleEl = document.getElementById("chart-title");
+    const chartSubtitleEl = document.getElementById("chart-subtitle");
+    const tableHead = document.getElementById("table-head");
+    const tableBody = document.getElementById("table-body");
+    const tableCaption = document.getElementById("table-caption");
+
+    let chartInstance = null;
+
+    function addMessage(text, sender = "bot") {
+      const row = document.createElement("div");
+      row.classList.add("message-row", sender);
+
+      const bubble = document.createElement("div");
+      bubble.classList.add("message-bubble", sender);
+      bubble.textContent = text;
+
+      row.appendChild(bubble);
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function setLoading(isLoading) {
+      loadingIndicator.style.display = isLoading ? "flex" : "none";
+    }
+
+    function updateKPIs(kpis) {
+      kpiGrid.innerHTML = "";
+      if (!kpis || kpis.length === 0) {
+        kpiGrid.innerHTML = `
+          <div class="kpi-card">
+            <div class="kpi-label">Estado</div>
+            <div class="kpi-value">Esperando consulta</div>
+            <div class="kpi-desc">Envía una pregunta para ver KPIs.</div>
+          </div>
+        `;
+        return;
+      }
+      for (const kpi of kpis) {
+        const card = document.createElement("div");
+        card.classList.add("kpi-card");
+        card.innerHTML = `
+          <div class="kpi-label">${kpi.label}</div>
+          <div class="kpi-value">${kpi.value}</div>
+          <div class="kpi-desc">${kpi.description || ""}</div>
+        `;
+        kpiGrid.appendChild(card);
+      }
+    }
+
+    function updateChart(chartConfig) {
+      const ctx = document.getElementById("chart").getContext("2d");
+      if (!chartConfig) {
+        chartTitleEl.textContent = "Sin gráfico disponible aún";
+        chartSubtitleEl.textContent = "";
+        if (chartInstance) {
+          chartInstance.destroy();
+          chartInstance = null;
+        }
+        return;
+      }
+
+      chartTitleEl.textContent = chartConfig.title || "Gráfico de datos";
+      chartSubtitleEl.textContent = chartConfig.subtitle || "";
+
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: chartConfig.type || "bar",
+        data: {
+          labels: chartConfig.labels || [],
+          datasets: [{
+            label: chartConfig.datasetLabel || "Monto",
+            data: chartConfig.data || [],
+            borderWidth: 1,
+            tension: 0.4,
+            fill: chartConfig.type === "line"
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: chartConfig.type === "pie" ? {} : {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    function updateTable(table) {
+      tableHead.innerHTML = "";
+      tableBody.innerHTML = "";
+
+      if (!table || !table.columns || !table.rows || table.columns.length === 0) {
+        tableCaption.textContent = "Se actualizará con cada pregunta.";
+        return;
+      }
+
+      const trHead = document.createElement("tr");
+      for (const col of table.columns) {
+        const th = document.createElement("th");
+        th.textContent = col;
+        trHead.appendChild(th);
+      }
+      tableHead.appendChild(trHead);
+
+      for (const row of table.rows) {
+        const tr = document.createElement("tr");
+        for (const cell of row) {
+          const td = document.createElement("td");
+          td.textContent = cell;
+          tr.appendChild(td);
+        }
+        tableBody.appendChild(tr);
+      }
+
+      tableCaption.textContent = table.caption || "Detalle resumido según tu consulta.";
+    }
+
+    // =========================
+    // 4. "IA" simulada
+    // =========================
+    function procesarPregunta(mensaje) {
+      const mensajeLower = mensaje.toLowerCase();
+      let dataFiltrada = [...ventas];
+      let descripcionRango = "todo el histórico disponible";
+
+      // Filtro de tiempo
+      if (mensajeLower.includes("última semana") || mensajeLower.includes("ultima semana") || mensajeLower.includes("últimos 7 días") || mensajeLower.includes("ultimos 7 dias")) {
+        dataFiltrada = filtrarUltimaSemana(dataFiltrada);
+        descripcionRango = "la última semana";
+      }
+
+      // Filtros por tipo de cliente
+      if (mensajeLower.includes("corporativ")) {
+        dataFiltrada = dataFiltrada.filter(v => v.tipoCliente === "Corporativo");
+      } else if (mensajeLower.includes("retail")) {
+        dataFiltrada = dataFiltrada.filter(v => v.tipoCliente === "Retail");
+      }
+
+      const totalVentas = dataFiltrada.reduce((acc, v) => acc + v.monto, 0);
+      let answerText = "";
+      let kpis = [];
+      let chart = null;
+      let table = null;
+
+      // Caso: por sucursal
+      if (mensajeLower.includes("sucursal")) {
+        const totalesPorSucursal = agruparYSumar(dataFiltrada, "sucursal");
+        const labels = Object.keys(totalesPorSucursal);
+        const data = Object.values(totalesPorSucursal);
+        const maxIndex = data.length ? data.indexOf(Math.max(...data)) : -1;
+        const sucursalTop = maxIndex >= 0 ? labels[maxIndex] : "N/A";
+        const montoTop = maxIndex >= 0 ? data[maxIndex] : 0;
+
+        answerText = `Analizando las ventas por sucursal para ${descripcionRango}, la sucursal con mayor facturación es ${sucursalTop} con ${formatearMoneda(montoTop)}. El total de ventas del periodo es de ${formatearMoneda(totalVentas)}.`;
+
+        kpis = [
+          {
+            label: "Ventas totales",
+            value: formatearMoneda(totalVentas),
+            description: `Monto total vendido en ${descripcionRango}.`
+          },
+          {
+            label: "Sucursal top",
+            value: sucursalTop,
+            description: `Sucursal con mayor venta en el periodo.`
+          },
+          {
+            label: "Núm. sucursales",
+            value: labels.length,
+            description: "Sucursales con movimientos registrados."
+          }
+        ];
+
+        chart = {
+          type: "bar",
+          title: "Ventas por sucursal",
+          subtitle: descripcionRango,
+          labels,
+          data,
+          datasetLabel: "Monto vendido"
+        };
+
+        table = {
+          columns: ["Sucursal", "Ventas"],
+          rows: labels.map((suc, i) => [suc, formatearMoneda(data[i])]),
+          caption: "Detalle de ventas por sucursal."
+        };
+      }
+      // Caso: tipo de cliente
+      else if (mensajeLower.includes("tipo de cliente") || mensajeLower.includes("tipo cliente") || mensajeLower.includes("clientes")) {
+        const totalesPorTipo = agruparYSumar(dataFiltrada, "tipoCliente");
+        const labels = Object.keys(totalesPorTipo);
+        const data = Object.values(totalesPorTipo);
+        const maxIndex = data.length ? data.indexOf(Math.max(...data)) : -1;
+        const tipoTop = maxIndex >= 0 ? labels[maxIndex] : "N/A";
+        const montoTop = maxIndex >= 0 ? data[maxIndex] : 0;
+
+        answerText = `Para ${descripcionRango}, el tipo de cliente con mayores ventas es ${tipoTop} con ${formatearMoneda(montoTop)}. El total de ventas del periodo es de ${formatearMoneda(totalVentas)}.`;
+
+        kpis = [
+          {
+            label: "Ventas totales",
+            value: formatearMoneda(totalVentas),
+            description: `Suma de ventas para ${descripcionRango}.`
+          },
+          {
+            label: "Tipo de cliente top",
+            value: tipoTop,
+            description: "Segmento con mayor facturación."
+          },
+          {
+            label: "Segmentos activos",
+            value: labels.length,
+            description: "Tipos de cliente con movimiento."
+          }
+        ];
+
+        chart = {
+          type: "pie",
+          title: "Distribución de ventas por tipo de cliente",
+          subtitle: descripcionRango,
+          labels,
+          data,
+          datasetLabel: "Monto"
+        };
+
+        table = {
+          columns: ["Tipo de cliente", "Ventas"],
+          rows: labels.map((tipo, i) => [tipo, formatearMoneda(data[i])]),
+          caption: "Detalle de ventas por tipo de cliente."
+        };
+      }
+      // Caso: categoría
+      else if (mensajeLower.includes("categoría") || mensajeLower.includes("categoria")) {
+        const totalesPorCategoria = agruparYSumar(dataFiltrada, "categoriaProducto");
+        const labels = Object.keys(totalesPorCategoria);
+        const data = Object.values(totalesPorCategoria);
+
+        answerText = `En ${descripcionRango}, las categorías con mayores ventas son: ${labels
+          .map((c, i) => `${c} (${formatearMoneda(data[i])})`)
+          .join(", ")}. El total vendido es de ${formatearMoneda(totalVentas)}.`;
+
+        kpis = [
+          {
+            label: "Ventas totales",
+            value: formatearMoneda(totalVentas),
+            description: `Monto total vendido en ${descripcionRango}.`
+          },
+          {
+            label: "Categorías activas",
+            value: labels.length,
+            description: "Categorías con movimiento."
+          },
+          {
+            label: "Ticket promedio aprox.",
+            value: formatearMoneda(Math.round(totalVentas / Math.max(dataFiltrada.length, 1))),
+            description: "Monto promedio por registro de venta."
+          }
+        ];
+
+        chart = {
+          type: "bar",
+          title: "Ventas por categoría de producto",
+          subtitle: descripcionRango,
+          labels,
+          data,
+          datasetLabel: "Monto vendido"
+        };
+
+        table = {
+          columns: ["Categoría", "Ventas"],
+          rows: labels.map((cat, i) => [cat, formatearMoneda(data[i])]),
+          caption: "Detalle de ventas por categoría de producto."
+        };
+      }
+      // Caso: ventas totales / resumen
+      else if (mensajeLower.includes("total") || mensajeLower.includes("ventas totales") || mensajeLower.includes("resumen")) {
+        const totalesPorDia = agruparYSumar(dataFiltrada, "fecha");
+        const labels = Object.keys(totalesPorDia).sort();
+        const data = labels.map(f => totalesPorDia[f]);
+
+        answerText = `El resumen de ${descripcionRango} muestra ventas totales por ${formatearMoneda(totalVentas)}. La tendencia por día se ve reflejada en el gráfico y detalle tabular.`;
+
+        kpis = [
+          {
+            label: "Ventas totales",
+            value: formatearMoneda(totalVentas),
+            description: `Monto consolidado en ${descripcionRango}.`
+          },
+          {
+            label: "Días con venta",
+            value: labels.length,
+            description: "Número de días con movimientos."
+          },
+          {
+            label: "Venta promedio diaria",
+            value: labels.length ? formatearMoneda(Math.round(totalVentas / labels.length)) : "Q 0",
+            description: "Promedio aproximado por día."
+          }
+        ];
+
+        chart = {
+          type: "line",
+          title: "Evolución de ventas por día",
+          subtitle: descripcionRango,
+          labels,
+          data,
+          datasetLabel: "Monto vendido por día"
+        };
+
+        table = {
+          columns: ["Fecha", "Ventas"],
+          rows: labels.map((f, i) => [f, formatearMoneda(data[i])]),
+          caption: "Ventas consolidadas por día."
+        };
+      }
+      // Caso por defecto
+      else {
+        // Combinado sucursal + cliente como ejemplo
+        const totalesPorSucursal = agruparYSumar(dataFiltrada, "sucursal");
+        const labels = Object.keys(totalesPorSucursal);
+        const data = Object.values(totalesPorSucursal);
+        const maxIndex = data.length ? data.indexOf(Math.max(...data)) : -1;
+        const sucursalTop = maxIndex >= 0 ? labels[maxIndex] : "N/A";
+
+        answerText =
+          `He analizado ${descripcionRango}. La sucursal con mayores ventas es ${sucursalTop} ` +
+          `y el total vendido es de ${formatearMoneda(totalVentas)}. ` +
+          `Puedes pedirme, por ejemplo: "Muéstrame las ventas de la última semana por sucursal" ` +
+          `o "Genera un resumen de ventas por tipo de cliente".`;
+
+        kpis = [
+          {
+            label: "Ventas totales",
+            value: formatearMoneda(totalVentas),
+            description: `Monto total vendido en ${descripcionRango}.`
+          },
+          {
+            label: "Registros analizados",
+            value: dataFiltrada.length,
+            description: "Cantidad de filas en el dataset filtrado."
+          },
+          {
+            label: "Sucursal top (general)",
+            value: sucursalTop,
+            description: "Sucursal con mayor venta según el filtro actual."
+          }
+        ];
+
+        chart = {
+          type: "bar",
+          title: "Ventas por sucursal (vista general)",
+          subtitle: descripcionRango,
+          labels,
+          data,
+          datasetLabel: "Monto vendido"
+        };
+
+        table = {
+          columns: ["Sucursal", "Ventas"],
+          rows: labels.map((suc, i) => [suc, formatearMoneda(data[i])]),
+          caption: "Vista general de ventas por sucursal."
+        };
+      }
+
+      return {
+        answerText,
+        kpis,
+        chart,
+        table
+      };
+    }
+
+    // =========================
+    // 5. Manejo de eventos
+    // =========================
+    chatForm.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      userInput.value = "";
+      addMessage(text, "user");
+
+      setLoading(true);
+
+      setTimeout(() => {
+        const result = procesarPregunta(text);
+        setLoading(false);
+        addMessage(result.answerText, "bot");
+        updateKPIs(result.kpis);
+        updateChart(result.chart);
+        updateTable(result.table);
+      }, 500); // pequeño delay para simular "pensando"
+    });
+
+    // Sugerencias
+    document.querySelectorAll(".suggestion-pill").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const prompt = btn.getAttribute("data-prompt");
+        userInput.value = prompt;
+        userInput.focus();
+      });
+    });
+
+    // Mensaje inicial + estado base
+    (function inicializar() {
+      addMessage(
+        "Hola, soy ChapInsight 👋\n\nPuedo darte insights sobre un dataset simulado de ventas.\n" +
+        "Prueba con algo como:\n• \"Muéstrame las ventas de la última semana por sucursal\"\n" +
+        "• \"¿Qué sucursal vendió más a clientes corporativos?\"\n" +
+        "• \"Genera un resumen de ventas por tipo de cliente y categoría de producto\"",
+        "bot"
+      );
+      updateKPIs(null);
+      updateChart(null);
+      updateTable(null);
+    })();
+  </script>
+</body>
+</html>
